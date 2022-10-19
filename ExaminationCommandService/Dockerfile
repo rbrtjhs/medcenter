@@ -1,9 +1,9 @@
-FROM maven:3.8.6-eclipse-temurin-17-alpine
+FROM maven:3.8.6-eclipse-temurin-17
 
-RUN mkdir /app
+COPY . /app/src
 
-COPY ./target/ExaminationCommandService-0.0.1-SNAPSHOT.jar /app
+WORKDIR /app/src
 
-WORKDIR /app
+RUN mvn --ntp clean install -DskipTests
 
-CMD ["java", "-jar", "ExaminationCommandService-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "./target/ExaminationCommandService-0.0.1-SNAPSHOT.jar"]
