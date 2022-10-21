@@ -10,7 +10,8 @@ import java.util.List;
 
 @Getter
 @Builder
-class Appointment {
+public class Appointment {
+    private String patientID;
     private String doctorID;
     private LocalDateTime time;
     private String diagnosisID;
