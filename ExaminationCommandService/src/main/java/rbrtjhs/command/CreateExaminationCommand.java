@@ -2,7 +2,6 @@ package rbrtjhs.command;
 
 import lombok.Builder;
 import lombok.Data;
-import rbrtjhs.core.ExaminationCommand;
 
 import java.util.List;
 

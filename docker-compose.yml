@@ -5,6 +5,8 @@ services:
     container_name: examination-command-service
     ports:
       - "${EXAMINATION_COMMAND_SERVICE_PORT}:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/eventstore
 
   zookeeper:
     image: quay.io/debezium/zookeeper:${DEBEZIUM_VERSION}
@@ -34,7 +36,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
-      - ./DDD/src/main/resources/sql/:/docker-entrypoint-initdb.d/
+      - ./ExaminationCommandService/src/main/resources/sql/:/docker-entrypoint-initdb.d/
       - /home/simpletask/Work/docker/volumes/microservice/mysql-ecs/data:/var/lib/mysql
 
   debezium_connector:

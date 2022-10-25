@@ -1,4 +1,4 @@
-package rbrtjhs.core;
+package rbrtjhs.command;
 
 import rbrtjhs.command.Command;
 
