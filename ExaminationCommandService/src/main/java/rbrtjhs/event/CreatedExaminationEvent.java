@@ -16,9 +16,11 @@ public class CreatedExaminationEvent implements Event {
     private String aggregateID;
     private EventData data;
 
+    private final String name = CreatedExaminationEvent.class.getSimpleName();
+
     public CreatedExaminationEvent(String aggregateID, List<Appointment> appointments) {
         this.aggregateID = aggregateID;
-        data = new CreateExaminationEventData(appointments);
+        this.data = new CreateExaminationEventData(appointments);
     }
 
     @Data

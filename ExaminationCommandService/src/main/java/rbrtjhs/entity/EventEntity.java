@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
+import rbrtjhs.core.Event;
 
 import javax.persistence.*;
 
@@ -35,9 +36,9 @@ public class EventEntity {
     @Type(type = "json")
     private Object data;
 
-    public EventEntity(String eventType, String aggregateID, Object data) {
-        this.eventType = eventType;
-        this.aggregateID = aggregateID;
-        this.data = data;
+    public EventEntity(Event event) {
+        this.eventType = event.getName();
+        this.aggregateID = event.getAggregateID();
+        this.data = event.getData();
     }
 }

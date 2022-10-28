@@ -1,33 +1,13 @@
 version: "3.8"
 services:
   examination-command-service:
-    image: examination_command_service
+    image: ecs
     container_name: examination-command-service
     ports:
       - "${EXAMINATION_COMMAND_SERVICE_PORT}:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/eventstore
-
-  zookeeper:
-    image: quay.io/debezium/zookeeper:${DEBEZIUM_VERSION}
-    container_name: zookeeper
-    ports:
-      - "${ZOOKEEPER_CLIENT_PORT}:2181"
-      - "${ZOOKEEPER_REPLICA_1_PORT}:2888"
-      - "${ZOOKEEPER_REPLICA_2_PORT}:3888"
-
-  kafka:
-    image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
-    container_name: "kafka"
-    depends_on:
-      - zookeeper
-    links:
-      - "zookeeper:zookeeper"
-    ports:
-      - "${KAFKA_PORT}:9092"
-    environment:
-      - ZOOKEEPER_CONNECT=zookeeper:${ZOOKEEPER_CLIENT_PORT}
-
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker:29092
   mysql:
     image: mysql:8.0.31-debian
     container_name: "mysql"
@@ -39,33 +19,43 @@ services:
       - ./ExaminationCommandService/src/main/resources/sql/:/docker-entrypoint-initdb.d/
       - /home/simpletask/Work/docker/volumes/microservice/mysql-ecs/data:/var/lib/mysql
 
-  debezium_connector:
-    image: quay.io/debezium/connect:${DEBEZIUM_VERSION}
-    container_name: debezium_connector
-    ports:
-      - "${DEBEZIUM_CONNECTOR_PORT}:8083"
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1
+    container_name: zookeeper
     environment:
-      - GROUP_ID=1
-      - CONFIG_STORAGE_TOPIC=my_connect_configs
-      - OFFSET_STORAGE_TOPIC=my_connect_offsets
-      - STATUS_STORAGE_TOPIC=my_connect_statuses
-      - BOOTSTRAP_SERVERS=kafka:${KAFKA_PORT}
-    links:
-      - "kafka:kafka"
-      - "mysql:mysql"
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "${ZOOKEEPER_CLIENT_PORT}:2181"
+
+  broker:
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: broker
+    ports:
+      - "${BROKER_EXTERNAL_PORT}:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:${ZOOKEEPER_CLIENT_PORT}'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://broker:${BROKER_INTERNAL_PORT},PLAINTEXT_EXTERNAL://localhost:${BROKER_EXTERNAL_PORT}
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://broker:${BROKER_INTERNAL_PORT},PLAINTEXT_EXTERNAL://localhost:${BROKER_EXTERNAL_PORT}
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
+    container_name: broker-ui
     ports:
       - "${KAFKA_UI_PORT}:8080"
+    depends_on:
+      - zookeeper
+      - broker
     environment:
-      - KAFKA_CLUSTERS_0_NAME=local
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:${KAFKA_PORT}
-
-  debezium-ui:
-    image: debezium/debezium-ui:${DEBEZIUM_VERSION}
-    container_name: "debezium-ui"
-    ports:
-      - "${DEBEZIUM_UI_PORT}:8080"
-    environment:
-      - KAFKA_CONNECT_URIS=http://debezium_connector:${DEBEZIUM_CONNECTOR_PORT}
+      KAFKA_CLUSTERS_0_NAME: primary #default cluster name
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 'broker:${BROKER_INTERNAL_PORT}'
+      KAFKA_CLUSTERS_0_ZOOKEEPER: 'zookeeper:${ZOOKEEPER_CLIENT_PORT}'
