@@ -25,14 +25,12 @@ public class ExaminationAggregation implements Serializable {
     private List<Appointment> appointments = new LinkedList<>();
 
     public Event process(CreateExaminationCommand command) {
-        var appointment = Appointment.builder()
-                .doctorID(command.getDoctorID())
-                .patientID(command.getPatientID())
-                .diagnosisID(command.getDiagnosisID())
-                .text(command.getText())
-                .time(LocalDateTime.now())
-                .recipes(command.getRecipes())
-                .build();
+        var appointment = new Appointment(command.getPatientID(),
+                command.getDoctorID(),
+                LocalDateTime.now(),
+                command.getDiagnosisID(),
+                command.getText(),
+                command.getRecipes());
         this.appointments.add(appointment);
         this.aggregateID = UUID.randomUUID().toString();
         return new CreatedExaminationEvent(this.aggregateID, this.appointments);

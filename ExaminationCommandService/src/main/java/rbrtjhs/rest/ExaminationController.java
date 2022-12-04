@@ -21,11 +21,11 @@ public class ExaminationController {
 
     @PostMapping
     public ResponseEntity createExamination(@RequestBody ExaminationRequestDTO examinationRequestDTO) throws JsonProcessingException, ExecutionException, InterruptedException {
-        examinationService.createExamination(examinationRequestDTO.getPatientID(),
-                examinationRequestDTO.getDoctorID(),
-                examinationRequestDTO.getText(),
-                examinationRequestDTO.getDiagnosisID(),
-                examinationRequestDTO.getRecipes());
-        return ResponseEntity.ok().build();
+        var eventEntity = examinationService.createExamination(examinationRequestDTO.patientID(),
+                examinationRequestDTO.doctorID(),
+                examinationRequestDTO.text(),
+                examinationRequestDTO.diagnosisID(),
+                examinationRequestDTO.recipes());
+        return ResponseEntity.ok(eventEntity);
     }
 }
