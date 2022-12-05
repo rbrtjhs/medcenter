@@ -1,23 +1,48 @@
 version: "3.8"
 services:
   examination-command-service:
-    image: ecs
+    image: examinationcommandservice
     container_name: examination-command-service
     ports:
       - "${EXAMINATION_COMMAND_SERVICE_PORT}:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/eventstore
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-examination-command-service:3306/eventstore
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker:29092
-  mysql:
+    depends_on:
+      - mysql-examination-command-service
+
+  mysql-examination-command-service:
     image: mysql:8.0.31-debian
-    container_name: "mysql"
+    container_name: "mysql-examination-command-service"
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "${MYSQL_EXAMINATION_COMMAND_SERVICE_PORT}:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - ./ExaminationCommandService/src/main/resources/sql/:/docker-entrypoint-initdb.d/
-      - /home/simpletask/Work/docker/volumes/microservice/mysql-ecs/data:/var/lib/mysql
+      - /home/simpletask/Work/docker/volumes/microservice/mysql-examination-command-service/data:/var/lib/mysql
+
+  doctor-service:
+    image: doctorservice
+    container_name: doctor-service
+    ports:
+      - "${DOCTOR_SERVICE_PORT}:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-doctor-service:3306/doctor_service
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=broker:29092
+    depends_on:
+      - mysql-doctor-service
+
+  mysql-doctor-service:
+    image: mysql:8.0.31-debian
+    container_name: "mysql-doctor-service"
+    ports:
+      - "${MYSQL_DOCTOR_SERVICE_PORT}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./DoctorService/src/main/resources/sql/:/docker-entrypoint-initdb.d/
+      - /home/simpletask/Work/docker/volumes/microservice/mysql-doctor-service/data:/var/lib/mysql
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.1
